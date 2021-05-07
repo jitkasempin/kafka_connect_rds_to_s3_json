@@ -3,8 +3,6 @@ terraform {
     google = {
       source  = "hashicorp/google"
       version = ">= 3.50"
-      project = "ageless-granite-273208"
-      region  = "us-central1"
     }
     bitbucket = {
       source  = "terraform-providers/bitbucket"
