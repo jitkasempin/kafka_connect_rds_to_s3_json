@@ -14,7 +14,7 @@ resource "google_project_service" "services" {
 #################
 
 resource "google_sql_database_instance" "cms_database_instance" {
-  project             = google_project.project.project_id
+  project             = "ageless-granite-273208"
   name                = "cms"
   database_version    = "MYSQL_5_7"
   region              = var.gcp_region
@@ -36,7 +36,7 @@ resource "google_sql_database_instance" "cms_database_instance" {
         iterator = pipelines_ip_addresses
 
         content {
-          name  = "Bitbucket Pipelines IP ${pipelines_ip_addresses.key}"
+          name  = "Compute Engine IP ${pipelines_ip_addresses.key}"
           value = pipelines_ip_addresses.value
         }
       }
@@ -50,7 +50,7 @@ resource "random_password" "cms_sql_root_password" {
 }
 
 resource "google_sql_user" "root" {
-  project  = google_project.project.project_id
+  project  = "ageless-granite-273208"
   instance = google_sql_database_instance.cms_database_instance.name
   name     = "root"
   password = random_password.cms_sql_root_password.result
@@ -63,7 +63,7 @@ resource "random_password" "cms_sql_local_password" {
 }
 
 resource "google_sql_user" "local" {
-  project  = google_project.project.project_id
+  project  = "ageless-granite-273208"
   instance = google_sql_database_instance.cms_database_instance.name
   name     = "local"
   password = random_password.cms_sql_local_password.result
@@ -71,13 +71,13 @@ resource "google_sql_user" "local" {
 }
 
 resource "google_sql_database" "cms_database_development" {
-  project  = google_project.project.project_id
+  project  = "ageless-granite-273208"
   instance = google_sql_database_instance.cms_database_instance.name
   name     = "development"
 }
 
 resource "google_sql_database" "cms_database_production" {
-  project  = google_project.project.project_id
+  project  = "ageless-granite-273208"
   instance = google_sql_database_instance.cms_database_instance.name
   name     = "production"
 }
@@ -87,8 +87,8 @@ resource "google_sql_database" "cms_database_production" {
 #################
 
 resource "google_cloud_run_service" "cms" {
-  project  = google_project.project.project_id
-  name     = "${google_project.project.project_id}-cms"
+  project  = "ageless-granite-273208"
+  name     = "ageless-granite-273208-cms-dev"
   location = var.gcp_region
 
   template {
@@ -99,7 +99,7 @@ resource "google_cloud_run_service" "cms" {
     }
     metadata {
       annotations = {
-        "run.googleapis.com/cloudsql-instances" = "${google_project.project.project_id}:${var.gcp_region}:${google_sql_database_instance.cms_database_instance.name}"
+        "run.googleapis.com/cloudsql-instances" = "ageless-granite-273208:${var.gcp_region}:${google_sql_database_instance.cms_database_instance.name}"
       }
     }
   }
@@ -108,9 +108,9 @@ resource "google_cloud_run_service" "cms" {
 }
 
 resource "google_cloud_run_service" "app" {
-  project  = google_project.project.project_id
-  name     = "${google_project.project.project_id}-app"
-  location = "europe-west1"
+  project  = "ageless-granite-273208"
+  name     = "ageless-granite-273208-app-dev"
+  location = "us-central1"
 
   template {
     spec {
@@ -160,28 +160,28 @@ resource "google_cloud_run_service_iam_policy" "noauth_app" {
 
 
 resource "google_service_account" "local_database" {
-  project      = google_project.project.project_id
+  project      = "ageless-granite-273208"
   account_id   = "local-database"
   display_name = "Local Database"
   depends_on   = [google_project_service.services]
 }
 
 resource "google_project_iam_member" "local_database_viewer" {
-  project    = google_project.project.project_id
+  project    = "ageless-granite-273208"
   role       = "roles/viewer"
   member     = "serviceAccount:${google_service_account.local_database.email}"
   depends_on = [google_project_service.services]
 }
 
 resource "google_project_iam_member" "local_database_sql_client" {
-  project    = google_project.project.project_id
+  project    = "ageless-granite-273208"
   role       = "roles/cloudsql.client"
   member     = "serviceAccount:${google_service_account.local_database.email}"
   depends_on = [google_project_service.services]
 }
 
 resource "google_project_iam_member" "local_database_sql_viewer" {
-  project    = google_project.project.project_id
+  project    = "ageless-granite-273208"
   role       = "roles/cloudsql.viewer"
   member     = "serviceAccount:${google_service_account.local_database.email}"
   depends_on = [google_project_service.services]
